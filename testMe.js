@@ -1,7 +1,6 @@
 const RData = require('./riverDataGetter');
 const actObj = require('./actObj.json');
 
-
 const rData = new RData();
 
 rData.getInstantData(["05587450", "05587498", "05587060", "385205090090501", "390019090412801"])
@@ -9,7 +8,13 @@ rData.getInstantData(["05587450", "05587498", "05587060", "385205090090501", "39
 
     console.log('call results:')
     console.dir(rData.dataObj, {depth:null});
-})
 
+    console.log('calling get forecast');
+    return rData.getForecast()
+})
+.then(()=>{
+    console.log('Forecast data = ');
+    console.dir(rData.fCast, {depth:null});
+})
 
 
