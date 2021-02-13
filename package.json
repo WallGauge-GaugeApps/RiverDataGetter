@@ -1,0 +1,19 @@
+{
+  "name": "river-data-getter",
+  "version": "1.0.0",
+  "description": "gets river data from USGS, NOAA, and Army Core of Engineeres public data APIs",
+  "main": "riverDataGetter.js",
+  "scripts": {
+    "test": "testMe.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WallGauge-GaugeApps/RiverDataGetter.git"
+  },
+  "author": "John Rucker",
+  "license": "MIT",
+  "homepage": "https://WallGauge.com",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
