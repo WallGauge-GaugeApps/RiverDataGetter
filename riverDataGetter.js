@@ -36,7 +36,7 @@ const forecastObjExample = {
     LongTermLowTime: new Date()
 };
 
-class riverDataGetter{
+class riverDataGetter {
     constructor() {
         this.dataObj = { instant: instantObjExample }
         this.fCast = forecastObjExample;
@@ -51,16 +51,13 @@ class riverDataGetter{
     getForecast(siteID = 'GRFI2') {
         return new Promise((resolve, reject) => {
             let uri = 'https://water.weather.gov/ahps2/hydrograph_to_xml.php?gage=' + siteID + '&output=xml'
-
             let callObj = {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 }
             };
-    
             logit('Fetching data from ' + uri);
-    
             fetch(uri, callObj)
                 .then(res => res.text())
                 .then((respText) => {
@@ -75,27 +72,27 @@ class riverDataGetter{
                                 var currentLvl = result.site.observed[0].datum[0].primary[0]._;
                                 var currentLvlTime = new Date(result.site.observed[0].datum[0].valid[0]._);
                                 //var lvlNow = Number(currentLvl);
-    
+
                                 var frcst1DayLvl = result.site.forecast[0].datum[3].primary[0]._;
                                 //var frcst1DayTime = new Date(result.site.forecast[0].datum[3].valid[0]._);     
                                 //var change1Day = 12 * (Number(frcst1DayLvl) - Number(currentLvl));        // caculate the change in inches   
-    
+
                                 //var frcst2DayLvl = result.site.forecast[0].datum[7].primary[0]._;
                                 //var frcst2DayTime = new Date(result.site.forecast[0].datum[7].valid[0]._);
                                 //var change2Day = 12 * (Number(frcst2DayLvl) - Number(currentLvl));        // caculate the change in inches 
-    
+
                                 //var frcst7DayLvl = result.site.forecast[0].datum[27].primary[0]._;
                                 //var frcst7DayTime = new Date(result.site.forecast[0].datum[27].valid[0]._);   
                                 //var change7Day = 12 * (Number(frcst7DayLvl) - Number(currentLvl));        // caculate the change in inches   
-    
+
                                 var lastFcast = result.site.forecast[0].datum;
-    
+
                                 //logit("Reading through forecast to find peek and dip. Fcast size = "+ lastFcast.length)
                                 var peekAmount = Number(currentLvl);
                                 var peekTime = currentLvlTime;
                                 var dipAmount = Number(currentLvl);
                                 var dipTime = currentLvlTime;
-    
+
                                 for (var i = 0; i < lastFcast.length; i++) {
                                     var x = Number(result.site.forecast[0].datum[i].primary[0]._);
                                     if (x > peekAmount) {
@@ -107,10 +104,10 @@ class riverDataGetter{
                                         dipTime = new Date(result.site.forecast[0].datum[i].valid[0]._);
                                     }
                                 }
-    
+
                                 //logit("peekAmount = " + peekAmount + ", on " + peekTime);
                                 //logit("dipAmount = " + dipAmount + ", on " + dipTime);         
-    
+
                                 this.fCast.Current = Number(currentLvl);
                                 this.fCast.Tomorrow = Number(frcst1DayLvl);
                                 this.fCast.LongTermHigh = Number(peekAmount);
@@ -128,7 +125,6 @@ class riverDataGetter{
                     reject(err)
                 });
         })
-
     };
 
     /** Reads Instant values for a site code

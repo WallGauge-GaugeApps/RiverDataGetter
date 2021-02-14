@@ -15,3 +15,9 @@ To find a site number [open this mapp](https://waterdata.usgs.gov/nwis/rt) and d
 
 
 NOAA [Appropriate data use](https://www.weather.gov/disclaimer) statement
+
+## Maps as I Frames
+From this document: https://water.weather.gov/ahps2/pdf/AHPS_region_iframe.pdf
+
+<iframe src="https://water.weather.gov/ahps/region_iframe.php?scale=true" height="830" width="960" frameborder="0" scrolling="no"></iframe>
+ 
