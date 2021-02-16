@@ -4,10 +4,11 @@ const parseString = require("xml2js").parseString;
 
 const logPrefix = 'riverDataGetter.js | ';
 
-const dailyApiURL = 'https://waterservices.usgs.gov/nwis/dv/?format=json&sites=';
+const forecastApiURL = 'https://water.weather.gov/ahps2/hydrograph_to_xml.php';
+const dailyApiURL = 'https://waterservices.usgs.gov/nwis/dv/?format=json';
 const instantApiURl = 'https://waterservices.usgs.gov/nwis/iv/?format=json';
 
-const instantObjExample = {
+const objExample = {
     "05587450": {
         "siteName": "Mississippi River at Grafton, IL",
         "latitude": 38.9679722,
@@ -16,48 +17,52 @@ const instantObjExample = {
             "description": "Gage height, ft",
             "unitCode": "ft",
             "value": "00.00",
-            "dateTime": "2021-02-13T10:30:00.000-06:00"
+            "dateTime": new Date("2021-02-13T10:30:00.000-06:00")
         },
         "00060": {
             "description": "Discharge, cubic feet per second",
             "unitCode": "ft3/s",
             "value": "0000",
-            "dateTime": "2021-02-13T10:30:00.000-06:00"
+            "dateTime": new Date("2021-02-13T10:30:00.000-06:00")
         }
     }
 };
 
 const forecastObjExample = {
-    Current: 0,
-    Tomorrow: 0,
-    LongTermHigh: 0,
-    LongTermHighTime: new Date(),
-    LongTermLow: 0,
-    LongTermLowTime: new Date()
+    "GRFI2": {
+        "Current": 0,
+        "Tomorrow": 0,
+        "LongTermHigh": 0,
+        "LongTermHighTime": new Date(),
+        "LongTermLow": 0,
+        "LongTermLowTime": new Date()
+    }
 };
 
 class riverDataGetter {
     constructor() {
-        this.dataObj = { instant: instantObjExample }
+        this.dataObj = { current: objExample, forecast: forecastObjExample, daily: objExample }
         this.fCast = forecastObjExample;
 
     };
 
-    /** Async call to fetch and parse river forecst data.  Emits newData whith this.fCast.
-     * 
+    /** Gets river foecast and returns promise when complete.  
+     * Populates this.dataObj.forecast{}
+     * returns a promise resolve = all xml data read from call
      * @param {String} siteID 'GRFI2' site location of gauge from //water.weather.gov/ahps
+     * @return {Promise} resolved promise = xml forecast data object
      */
 
     getForecast(siteID = 'GRFI2') {
         return new Promise((resolve, reject) => {
-            let uri = 'https://water.weather.gov/ahps2/hydrograph_to_xml.php?gage=' + siteID + '&output=xml'
+            let uri = forecastApiURL + '?gage=' + siteID + '&output=xml'
             let callObj = {
                 method: 'GET',
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 }
             };
-            logit('Fetching data from ' + uri);
+            logit('Fetching forecast from ' + uri);
             fetch(uri, callObj)
                 .then(res => res.text())
                 .then((respText) => {
@@ -67,27 +72,10 @@ class riverDataGetter {
                                 console.error('parsing results of fetch. ', err);
                                 reject(err);
                             } else {
-                                //var siteName = result.site.$.name
-                                //var siteId = result.site.$.id
                                 var currentLvl = result.site.observed[0].datum[0].primary[0]._;
                                 var currentLvlTime = new Date(result.site.observed[0].datum[0].valid[0]._);
-                                //var lvlNow = Number(currentLvl);
-
                                 var frcst1DayLvl = result.site.forecast[0].datum[3].primary[0]._;
-                                //var frcst1DayTime = new Date(result.site.forecast[0].datum[3].valid[0]._);     
-                                //var change1Day = 12 * (Number(frcst1DayLvl) - Number(currentLvl));        // caculate the change in inches   
-
-                                //var frcst2DayLvl = result.site.forecast[0].datum[7].primary[0]._;
-                                //var frcst2DayTime = new Date(result.site.forecast[0].datum[7].valid[0]._);
-                                //var change2Day = 12 * (Number(frcst2DayLvl) - Number(currentLvl));        // caculate the change in inches 
-
-                                //var frcst7DayLvl = result.site.forecast[0].datum[27].primary[0]._;
-                                //var frcst7DayTime = new Date(result.site.forecast[0].datum[27].valid[0]._);   
-                                //var change7Day = 12 * (Number(frcst7DayLvl) - Number(currentLvl));        // caculate the change in inches   
-
                                 var lastFcast = result.site.forecast[0].datum;
-
-                                //logit("Reading through forecast to find peek and dip. Fcast size = "+ lastFcast.length)
                                 var peekAmount = Number(currentLvl);
                                 var peekTime = currentLvlTime;
                                 var dipAmount = Number(currentLvl);
@@ -104,16 +92,21 @@ class riverDataGetter {
                                         dipTime = new Date(result.site.forecast[0].datum[i].valid[0]._);
                                     }
                                 }
+                                this.dataObj.forecast[siteID] = {};
 
-                                //logit("peekAmount = " + peekAmount + ", on " + peekTime);
-                                //logit("dipAmount = " + dipAmount + ", on " + dipTime);         
+                                this.dataObj.forecast[siteID].Current = Number(currentLvl);
+                                this.dataObj.forecast[siteID].Tomorrow = Number(frcst1DayLvl);
+                                this.dataObj.forecast[siteID].LongTermHigh = Number(peekAmount);
+                                this.dataObj.forecast[siteID].LongTermHighTime = peekTime;
+                                this.dataObj.forecast[siteID].LongTermLow = Number(dipAmount);
+                                this.dataObj.forecast[siteID].LongTermLowTime = dipTime;
 
-                                this.fCast.Current = Number(currentLvl);
-                                this.fCast.Tomorrow = Number(frcst1DayLvl);
-                                this.fCast.LongTermHigh = Number(peekAmount);
-                                this.fCast.LongTermHighTime = peekTime;
-                                this.fCast.LongTermLow = Number(dipAmount);
-                                this.fCast.LongTermLowTime = dipTime;
+                                // this.fCast.Current = Number(currentLvl);
+                                // this.fCast.Tomorrow = Number(frcst1DayLvl);
+                                // this.fCast.LongTermHigh = Number(peekAmount);
+                                // this.fCast.LongTermHighTime = peekTime;
+                                // this.fCast.LongTermLow = Number(dipAmount);
+                                // this.fCast.LongTermLowTime = dipTime;
                                 resolve(result);
                             }
                         });
@@ -128,7 +121,7 @@ class riverDataGetter {
     };
 
     /** Reads Instant values for a site code
-     * Populates this.dataObj.instant{}
+     * Populates this.dataObj.current{}
      * returns a promise resolve = all json data read from call
      * 
      * To get a list os all dataSiteCodes in Illinois https://waterservices.usgs.gov/nwis/site/?format=rdb&stateCd=il
@@ -137,7 +130,7 @@ class riverDataGetter {
      * @param {[string]} dataParCode ["00060", "00065"] defaults to null (read all available data for dataSiteCode)
      * @return {Promise} resolved promise = json data object
      */
-    getInstantData(dataSiteCode = ["05587450", "05587498"], dataParCode = null) {
+    getCurrentData(dataSiteCode = ["05587450", "05587498"], dataParCode = null) {
         return new Promise((resolve, reject) => {
             let callObj = {
                 method: 'GET',
@@ -150,24 +143,75 @@ class riverDataGetter {
             if (dataParCode != null) {
                 uri = instantApiURl + '&sites=' + dataSiteCode + '&parameterCD=' + dataParCode;
             }
+            logit('Fetching current from ' + uri);
             try {
                 fetch(uri, callObj)
                     .then(res => res.json())
                     .then((jsonData) => {
                         jsonData.value.timeSeries.forEach((rcd) => {
-                            this.dataObj.instant[rcd.sourceInfo.siteCode[0].value] = {};
+                            this.dataObj.current[rcd.sourceInfo.siteCode[0].value] = {};
                         })
                         jsonData.value.timeSeries.forEach((rcd) => {
                             let siteCode = rcd.sourceInfo.siteCode[0].value;
-                            this.dataObj.instant[siteCode].siteName = rcd.sourceInfo.siteName;
-                            this.dataObj.instant[siteCode].latitude = rcd.sourceInfo.geoLocation.geogLocation.latitude;
-                            this.dataObj.instant[siteCode].longitude = rcd.sourceInfo.geoLocation.geogLocation.longitude;
+                            this.dataObj.current[siteCode].siteName = rcd.sourceInfo.siteName;
+                            this.dataObj.current[siteCode].latitude = rcd.sourceInfo.geoLocation.geogLocation.latitude;
+                            this.dataObj.current[siteCode].longitude = rcd.sourceInfo.geoLocation.geogLocation.longitude;
                             let vc = rcd.variable.variableCode[0].value
-                            this.dataObj.instant[siteCode][vc] = {};
-                            this.dataObj.instant[siteCode][vc].description = rcd.variable.variableDescription;
-                            this.dataObj.instant[siteCode][vc].unitCode = rcd.variable.unit.unitCode;
-                            this.dataObj.instant[siteCode][vc].value = rcd.values[0].value[0].value;
-                            this.dataObj.instant[siteCode][vc].dateTime = rcd.values[0].value[0].dateTime;
+                            this.dataObj.current[siteCode][vc] = {};
+                            this.dataObj.current[siteCode][vc].description = rcd.variable.variableDescription;
+                            this.dataObj.current[siteCode][vc].unitCode = rcd.variable.unit.unitCode;
+                            this.dataObj.current[siteCode][vc].value = rcd.values[0].value[0].value;
+                            this.dataObj.current[siteCode][vc].dateTime = new Date(rcd.values[0].value[0].dateTime);
+                        });
+                        resolve(jsonData);
+                    });
+            } catch (err) {
+                reject(err);
+            };
+        });
+    };
+
+    /**
+     * Populates this.dataObj.current{}
+     * returns a promise resolve = all json data read from call
+     * 
+     * To get a list os all dataSiteCodes in Illinois https://waterservices.usgs.gov/nwis/site/?format=rdb&stateCd=il
+     * @param {[string]} dataSiteCode ["05587450", "05587498"] Site codes to look up
+     * @param {[string]} dataParCode ["00060", "00065"] defaults to null (read all available data for dataSiteCode)
+     * @return {Promise} resolved promise = json data object
+     */
+    getDailyData(dataSiteCode = ["05587450", "05587498"], dataParCode = null) {
+        return new Promise((resolve, reject) => {
+            let callObj = {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                compress: true
+            };
+            let uri = dailyApiURL + '&sites=' + dataSiteCode;
+            if (dataParCode != null) {
+                uri = dailyApiURL + '&sites=' + dataSiteCode + '&parameterCD=' + dataParCode;
+            }
+            logit('Fetching daily from ' + uri);
+            try {
+                fetch(uri, callObj)
+                    .then(res => res.json())
+                    .then((jsonData) => {
+                        jsonData.value.timeSeries.forEach((rcd) => {
+                            this.dataObj.daily[rcd.sourceInfo.siteCode[0].value] = {};
+                        })
+                        jsonData.value.timeSeries.forEach((rcd) => {
+                            let siteCode = rcd.sourceInfo.siteCode[0].value;
+                            this.dataObj.daily[siteCode].siteName = rcd.sourceInfo.siteName;
+                            this.dataObj.daily[siteCode].latitude = rcd.sourceInfo.geoLocation.geogLocation.latitude;
+                            this.dataObj.daily[siteCode].longitude = rcd.sourceInfo.geoLocation.geogLocation.longitude;
+                            let vc = rcd.variable.variableCode[0].value
+                            this.dataObj.daily[siteCode][vc] = {};
+                            this.dataObj.daily[siteCode][vc].description = rcd.variable.variableDescription;
+                            this.dataObj.daily[siteCode][vc].unitCode = rcd.variable.unit.unitCode;
+                            this.dataObj.daily[siteCode][vc].value = rcd.values[0].value[0].value;
+                            this.dataObj.daily[siteCode][vc].dateTime = new Date(rcd.values[0].value[0].dateTime);
                         });
                         resolve(jsonData);
                     });
@@ -185,272 +229,3 @@ function logit(txt = '') {
 
 module.exports = riverDataGetter
 
-var jsonDat = {
-    name: 'ns1:timeSeriesResponseType',
-    declaredType: 'org.cuahsi.waterml.TimeSeriesResponseType',
-    scope: 'javax.xml.bind.JAXBElement$GlobalScope',
-    value: {
-        queryInfo: {
-            queryURL: 'http://waterservices.usgs.gov/nwis/iv/format=json&sites=05587450,05587498&parameterCD=00060,00065',
-            criteria: {
-                locationParam: '[ALL:05587450, ALL:05587498]',
-                variableParam: '[00060, 00065]',
-                parameter: []
-            },
-            note: [
-                {
-                    value: '[ALL:05587450, ALL:05587498]',
-                    title: 'filter:sites'
-                },
-                {
-                    value: '[mode=LATEST, modifiedSince=null]',
-                    title: 'filter:timeRange'
-                },
-                { value: 'methodIds=[ALL]', title: 'filter:methodId' },
-                { value: '2021-02-13T19:28:01.802Z', title: 'requestDT' },
-                {
-                    value: '963d8880-6e31-11eb-84ec-005056beda50',
-                    title: 'requestId'
-                },
-                {
-                    value: 'Provisional data are subject to revision. Go to http://waterdata.usgs.gov/nwis/help/?provisional for more information.',
-                    title: 'disclaimer'
-                },
-                { value: 'caas01', title: 'server' }
-            ]
-        },
-        timeSeries: [
-            {
-                sourceInfo: {
-                    siteName: 'Mississippi River at Grafton, IL',
-                    siteCode: [
-                        { value: '05587450', network: 'NWIS', agencyCode: 'USGS' }
-                    ],
-                    timeZoneInfo: {
-                        defaultTimeZone: { zoneOffset: '-06:00', zoneAbbreviation: 'CST' },
-                        daylightSavingsTimeZone: { zoneOffset: '-05:00', zoneAbbreviation: 'CDT' },
-                        siteUsesDaylightSavingsTime: true
-                    },
-                    geoLocation: {
-                        geogLocation: {
-                            srs: 'EPSG:4326',
-                            latitude: 38.9679722,
-                            longitude: -90.429
-                        },
-                        localSiteXY: []
-                    },
-                    note: [],
-                    siteType: [],
-                    siteProperty: [
-                        { value: 'ST', name: 'siteTypeCd' },
-                        { value: '07110009', name: 'hucCd' },
-                        { value: '17', name: 'stateCd' },
-                        { value: '17083', name: 'countyCd' }
-                    ]
-                },
-                variable: {
-                    variableCode: [
-                        {
-                            value: '00060',
-                            network: 'NWIS',
-                            vocabulary: 'NWIS:UnitValues',
-                            variableID: 45807197,
-                            default: true
-                        }
-                    ],
-                    variableName: 'Streamflow, ft&#179;/s',
-                    variableDescription: 'Discharge, cubic feet per second',
-                    valueType: 'Derived Value',
-                    unit: { unitCode: 'ft3/s' },
-                    options: { option: [{ name: 'Statistic', optionCode: '00000' }] },
-                    note: [],
-                    noDataValue: -999999,
-                    variableProperty: [],
-                    oid: '45807197'
-                },
-                values: [
-                    {
-                        value: [
-                            {
-                                value: '97200',
-                                qualifiers: ['P'],
-                                dateTime: '2021-02-13T13:00:00.000-06:00'
-                            }
-                        ],
-                        qualifier: [
-                            {
-                                qualifierCode: 'P',
-                                qualifierDescription: 'Provisional data subject to revision.',
-                                qualifierID: 0,
-                                network: 'NWIS',
-                                vocabulary: 'uv_rmk_cd'
-                            }
-                        ],
-                        qualityControlLevel: [],
-                        method: [{ methodDescription: '', methodID: 231787 }],
-                        source: [],
-                        offset: [],
-                        sample: [],
-                        censorCode: []
-                    }
-                ],
-                name: 'USGS:05587450:00060:00000'
-            },
-            {
-                sourceInfo: {
-                    siteName: 'Mississippi River at Grafton, IL',
-                    siteCode: [
-                        { value: '05587450', network: 'NWIS', agencyCode: 'USGS' }
-                    ],
-                    timeZoneInfo: {
-                        defaultTimeZone: { zoneOffset: '-06:00', zoneAbbreviation: 'CST' },
-                        daylightSavingsTimeZone: { zoneOffset: '-05:00', zoneAbbreviation: 'CDT' },
-                        siteUsesDaylightSavingsTime: true
-                    },
-                    geoLocation: {
-                        geogLocation: {
-                            srs: 'EPSG:4326',
-                            latitude: 38.9679722,
-                            longitude: -90.429
-                        },
-                        localSiteXY: []
-                    },
-                    note: [],
-                    siteType: [],
-                    siteProperty: [
-                        { value: 'ST', name: 'siteTypeCd' },
-                        { value: '07110009', name: 'hucCd' },
-                        { value: '17', name: 'stateCd' },
-                        { value: '17083', name: 'countyCd' }
-                    ]
-                },
-                variable: {
-                    variableCode: [
-                        {
-                            value: '00065',
-                            network: 'NWIS',
-                            vocabulary: 'NWIS:UnitValues',
-                            variableID: 45807202,
-                            default: true
-                        }
-                    ],
-                    variableName: 'Gage height, ft',
-                    variableDescription: 'Gage height, feet',
-                    valueType: 'Derived Value',
-                    unit: { unitCode: 'ft' },
-                    options: { option: [{ name: 'Statistic', optionCode: '00000' }] },
-                    note: [],
-                    noDataValue: -999999,
-                    variableProperty: [],
-                    oid: '45807202'
-                },
-                values: [
-                    {
-                        value: [
-                            {
-                                value: '16.08',
-                                qualifiers: ['P'],
-                                dateTime: '2021-02-13T13:00:00.000-06:00'
-                            }
-                        ],
-                        qualifier: [
-                            {
-                                qualifierCode: 'P',
-                                qualifierDescription: 'Provisional data subject to revision.',
-                                qualifierID: 0,
-                                network: 'NWIS',
-                                vocabulary: 'uv_rmk_cd'
-                            }
-                        ],
-                        qualityControlLevel: [],
-                        method: [{ methodDescription: '', methodID: 76827 }],
-                        source: [],
-                        offset: [],
-                        sample: [],
-                        censorCode: []
-                    }
-                ],
-                name: 'USGS:05587450:00065:00000'
-            },
-            {
-                sourceInfo: {
-                    siteName: 'Mississippi River Pool Lock and Dam 26 at Alton,IL',
-                    siteCode: [
-                        { value: '05587498', network: 'NWIS', agencyCode: 'USGS' }
-                    ],
-                    timeZoneInfo: {
-                        defaultTimeZone: { zoneOffset: '-06:00', zoneAbbreviation: 'CST' },
-                        daylightSavingsTimeZone: { zoneOffset: '-05:00', zoneAbbreviation: 'CDT' },
-                        siteUsesDaylightSavingsTime: true
-                    },
-                    geoLocation: {
-                        geogLocation: {
-                            srs: 'EPSG:4326',
-                            latitude: 38.88644444,
-                            longitude: -90.1825472
-                        },
-                        localSiteXY: []
-                    },
-                    note: [],
-                    siteType: [],
-                    siteProperty: [
-                        { value: 'ST', name: 'siteTypeCd' },
-                        { value: '07110009', name: 'hucCd' },
-                        { value: '17', name: 'stateCd' },
-                        { value: '17119', name: 'countyCd' }
-                    ]
-                },
-                variable: {
-                    variableCode: [
-                        {
-                            value: '00065',
-                            network: 'NWIS',
-                            vocabulary: 'NWIS:UnitValues',
-                            variableID: 45807202,
-                            default: true
-                        }
-                    ],
-                    variableName: 'Gage height, ft',
-                    variableDescription: 'Gage height, feet',
-                    valueType: 'Derived Value',
-                    unit: { unitCode: 'ft' },
-                    options: { option: [{ name: 'Statistic', optionCode: '00000' }] },
-                    note: [],
-                    noDataValue: -999999,
-                    variableProperty: [],
-                    oid: '45807202'
-                },
-                values: [
-                    {
-                        value: [
-                            {
-                                value: '19.34',
-                                qualifiers: ['P'],
-                                dateTime: '2021-02-13T13:00:00.000-06:00'
-                            }
-                        ],
-                        qualifier: [
-                            {
-                                qualifierCode: 'P',
-                                qualifierDescription: 'Provisional data subject to revision.',
-                                qualifierID: 0,
-                                network: 'NWIS',
-                                vocabulary: 'uv_rmk_cd'
-                            }
-                        ],
-                        qualityControlLevel: [],
-                        method: [{ methodDescription: '', methodID: 76831 }],
-                        source: [],
-                        offset: [],
-                        sample: [],
-                        censorCode: []
-                    }
-                ],
-                name: 'USGS:05587498:00065:00000'
-            }
-        ]
-    },
-    nil: false,
-    globalScope: true,
-    typeSubstituted: false
-}
