@@ -19,7 +19,7 @@ This class uses the following three REST Web Service endpoints to retrieve river
 * `waterservices.usgs.gov/nwis/iv/`
   * This endpoint is accessed by calling the riverDataGetter.getCurrentData(dataSiteCode, dataParCode)
   * It will return current gauge data collected and updated about every 15 minutes by the automated gauges on the river.
-  * The `dataSiteCode` is the code that references the physical location of the river gauge.  You can find the dataSiteCode with this query tool [Lookup site based on state](https://waterservices.usgs.gov/rest/IV-Test-Tool.html).
+  * The `dataSiteCode` is the code that references the physical location of the river gauge.  Use [this map and click on the state and gauge site](https://waterdata.usgs.gov/nwis/rt) to find a gauge's data site code.  You can also query the data site code database with this query tool [Data site code query](https://waterservices.usgs.gov/rest/IV-Test-Tool.html). 
   * The `dataParCode` is optional and will return all data for a gauge if left blank.  If you would like to narrow your call to specific data types you can pass it [parameter codes found here](https://help.waterdata.usgs.gov/codes-and-parameters/parameters).
 
 ## How to install
