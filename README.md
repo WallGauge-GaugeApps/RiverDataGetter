@@ -30,7 +30,10 @@ This class uses the following three REST Web Service endpoints to retrieve river
 
 ## Data Object
 
+Calls to RiverDataGetter methods return a promise with the raw data from the REST web service end-points.  The data is also parsed and used to populate the following class data object RiverDataGetter.dataObj:
+
 ```
+RiverDataGetter.dtaObj = 
 {
   current: {                                                // dtaObj.current is populated with data from calls to .getCurrentData(dataSiteCode)
     '05587450': {                                           // Site Code number passed as dataSiteCode to the getCurrentData method
