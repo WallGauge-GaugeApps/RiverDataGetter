@@ -8,7 +8,7 @@ This class uses the following three REST Web Service endpoints to retrieve river
 
 * `water.weather.gov/ahps2/hydrograph_to_xml.php`
   * This endpoint is accessed by calling the riverDataGetter.getForecast(`siteID` = 'GRFI2')
-  * It will retrieve the river forecast for the `siteID` passed to it.  You can find the `siteID` by clicking on the map below and drilling down to a gauge icon and hover your mouse over it to see the site ID.
+  * It will retrieve the river forecast for the `siteID` passed to it.  You can find the `siteID` by clicking on the [map at this link](https://water.weather.gov/ahps/region_iframe.php?scale=true) and drill down to a gauge location.  Then hover your mouse over the colored dot or click on it to open and see the site ID.
 
 * `waterservices.usgs.gov/nwis/dv/`
   * This endpoint is accessed by calling the riverDataGetter.getDailyData(`dataSiteCode, dataParCode`).
