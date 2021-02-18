@@ -4,7 +4,7 @@ The riverDataGetter.js is a Node.js class for accessing river gauge data from th
 
 ## Data Source
 
-This class uses the fowling three REST Web Service endpoints to retrieve river gauge data:
+This class uses the fowlling three REST Web Service endpoints to retrieve river gauge data:
 
 * `water.weather.gov/ahps2/hydrograph_to_xml.php`
   * This endpoint is accessed by calling the riverDataGetter.getForecast(`siteID` = 'GRFI2')
