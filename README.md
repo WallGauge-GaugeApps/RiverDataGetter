@@ -32,7 +32,7 @@ This class uses the following three REST Web Service endpoints to retrieve river
 
 ```
 {
-  current: {                                                // dtaObj.current is populated with from calls to .getCurrentData(dataSiteCode)
+  current: {                                                // dtaObj.current is populated with data from calls to .getCurrentData(dataSiteCode)
     '05587450': {                                           // Site Code number passed as dataSiteCode to the getCurrentData method
       siteName: 'Mississippi River at Grafton, IL',         // Location / name of the gauge
       latitude: 38.9679722,                                 // River Gauge's latitude
@@ -51,7 +51,7 @@ This class uses the following three REST Web Service endpoints to retrieve river
       }
     }
   },
-  forecast: {                                               // dtaObj.forecast is populated with from calls to .getForecast(siteID)
+  forecast: {                                               // dtaObj.forecast is populated with data from calls to .getForecast(siteID)
     GRFI2: {                                                // Site ID passed as siteID to the .getForecast method
       Current: 16.28,                                       // Number = the current gauge height
       Tomorrow: 16.1,                                       // Number = the forecasted gauge height 24hours from now
@@ -61,7 +61,7 @@ This class uses the following three REST Web Service endpoints to retrieve river
       LongTermLowTime: 2021-02-20T18:00:00.000Z             // Date = the date and time of the LongTermLow
     }
   },
-  daily: {                                                  // dtaObj.daily is populated with results from calls to .getDailyData(dataSiteCode)
+  daily: {                                                  // dtaObj.daily is populated with data from calls to .getDailyData(dataSiteCode)
     '05587450': {                                           // Site Code number passed as dataSiteCode to the getDailyData method
       siteName: 'Mississippi River at Grafton, IL',         // Location / name of the gauge
       latitude: 38.9679722,                                 // River Gauge's latitude
