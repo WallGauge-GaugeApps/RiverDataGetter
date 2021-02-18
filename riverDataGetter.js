@@ -8,7 +8,27 @@ const forecastApiURL = 'https://water.weather.gov/ahps2/hydrograph_to_xml.php';
 const dailyApiURL = 'https://waterservices.usgs.gov/nwis/dv/?format=json';
 const instantApiURl = 'https://waterservices.usgs.gov/nwis/iv/?format=json';
 
-const objExample = {
+const currentObjExample = {
+    "05587450": {
+        "siteName": "Mississippi River at Grafton, IL",
+        "latitude": 38.9679722,
+        "longitude": -90.429,
+        "00065": {
+            "description": "Gage height, ft",
+            "unitCode": "ft",
+            "value": "00.00",
+            "dateTime": new Date("2021-02-13T10:30:00.000-06:00")
+        },
+        "00060": {
+            "description": "Discharge, cubic feet per second",
+            "unitCode": "ft3/s",
+            "value": "0000",
+            "dateTime": new Date("2021-02-13T10:30:00.000-06:00")
+        }
+    }
+};
+
+const dailyObjExample = {
     "05587450": {
         "siteName": "Mississippi River at Grafton, IL",
         "latitude": 38.9679722,
@@ -40,10 +60,15 @@ const forecastObjExample = {
 };
 
 class riverDataGetter {
+    /**
+     * 
+     */
     constructor() {
-        this.dataObj = { current: objExample, forecast: forecastObjExample, daily: objExample }
-        this.fCast = forecastObjExample;
-
+        this.dataObj = {
+            current: currentObjExample,
+            forecast: forecastObjExample,
+            daily: dailyObjExample
+        };
     };
 
     /** Gets river foecast and returns promise when complete.  
@@ -93,20 +118,12 @@ class riverDataGetter {
                                     }
                                 }
                                 this.dataObj.forecast[siteID] = {};
-
                                 this.dataObj.forecast[siteID].Current = Number(currentLvl);
                                 this.dataObj.forecast[siteID].Tomorrow = Number(frcst1DayLvl);
                                 this.dataObj.forecast[siteID].LongTermHigh = Number(peekAmount);
                                 this.dataObj.forecast[siteID].LongTermHighTime = peekTime;
                                 this.dataObj.forecast[siteID].LongTermLow = Number(dipAmount);
                                 this.dataObj.forecast[siteID].LongTermLowTime = dipTime;
-
-                                // this.fCast.Current = Number(currentLvl);
-                                // this.fCast.Tomorrow = Number(frcst1DayLvl);
-                                // this.fCast.LongTermHigh = Number(peekAmount);
-                                // this.fCast.LongTermHighTime = peekTime;
-                                // this.fCast.LongTermLow = Number(dipAmount);
-                                // this.fCast.LongTermLowTime = dipTime;
                                 resolve(result);
                             }
                         });

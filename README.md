@@ -28,6 +28,61 @@ This class uses the following three REST Web Service endpoints to retrieve river
 * type `npm install`
 * to test type `node testMe`
 
+## Data Object
+
+```
+{
+  current: {                                                // dtaObj.current is populated with from calls to .getCurrentData(dataSiteCode)
+    '05587450': {                                           // Site Code number passed as dataSiteCode to the getCurrentData method
+      siteName: 'Mississippi River at Grafton, IL',         // Location / name of the gauge
+      latitude: 38.9679722,                                 // River Gauge's latitude
+      longitude: -90.429,                                   // River Gauge's longitude
+      '00060': {                                            // Parameter code for discharge (river flow past gauge)
+        description: 'Discharge, cubic feet per second',    // Parameter description
+        unitCode: 'ft3/s',                                  // Unit code for parameter in this case cubic feet per second
+        value: '92400',                                     // String = the value read from the gauge database
+        dateTime: 2021-02-17T06:00:00.000Z                  // Date = the time this data was read and placed into USGS.gov database
+      },
+      '00065': {                                            // Parameter code for Gauge Height (water depth)
+        description: 'Gage height, feet',                   // Parameter description
+        unitCode: 'ft',                                     // Unit code for parameter in this case it is feet above gauge height
+        value: '16.29',                                     // String = the value read from the gauge database
+        dateTime: 2021-02-18T06:00:00.000Z                  // Date = the time this data was read and placed into USGS.gov database
+      }
+    }
+  },
+  forecast: {                                               // dtaObj.forecast is populated with from calls to .getForecast(siteID)
+    GRFI2: {                                                // Site ID passed as siteID to the .getForecast method
+      Current: 16.28,                                       // Number = the current gauge height
+      Tomorrow: 16.1,                                       // Number = the forecasted gauge height 24hours from now
+      LongTermHigh: 16.28,                                  // Number = the highest peak over the next 14 days
+      LongTermHighTime: 2021-02-18T13:30:00.000Z,           // Date = the date and time of the LongTermHigh
+      LongTermLow: 15.9,                                    // Number = the lowest water level over the next 14 days
+      LongTermLowTime: 2021-02-20T18:00:00.000Z             // Date = the date and time of the LongTermLow
+    }
+  },
+  daily: {                                                  // dtaObj.daily is populated with results from calls to .getDailyData(dataSiteCode)
+    '05587450': {                                           // Site Code number passed as dataSiteCode to the getDailyData method
+      siteName: 'Mississippi River at Grafton, IL',         // Location / name of the gauge
+      latitude: 38.9679722,                                 // River Gauge's latitude
+      longitude: -90.429,                                   // River Gauge's longitude
+      '00060': {                                            // Parameter code for discharge (river flow past gauge)
+        description: 'Discharge, cubic feet per second',    // Parameter description
+        unitCode: 'ft3/s',                                  // Unit code for parameter in this case cubic feet per second
+        value: '92400',                                     // String = the value read from the gauge database
+        dateTime: 2021-02-17T06:00:00.000Z                  // Date = the time this data was read and placed into USGS.gov database
+      },
+      '00065': {                                            // Parameter code for Gauge Height (water depth)
+        description: 'Gage height, feet',                   // Parameter description
+        unitCode: 'ft',                                     // Unit code for parameter in this case it is feet above gauge height
+        value: '16.29',                                     // String = the value read from the gauge database
+        dateTime: 2021-02-18T06:00:00.000Z                  // Date = the time this data was read and placed into USGS.gov database
+      }
+    }
+  }
+}
+```
+
 ## More Information
 
 [USGS water services](https://waterservices.usgs.gov/rest/) For current and historic river levels.
